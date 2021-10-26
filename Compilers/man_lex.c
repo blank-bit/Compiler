@@ -1,3 +1,9 @@
+/*********************************************
+ @Author       : Mr.Wang
+ @Date         : 2021-10-14 19:22:25
+ @FilePath     : /Compilers/man_lex.c
+ @Description  : 编译原理实验一
+*********************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -42,12 +48,13 @@ Key_word Key[MAXSIZE] = //保留字和特殊符号数组
         {"main", "main", "-"},         // 11
         {"break", "break", "-"},       // 12
 
-        {"", "", ""},         // 13空余出来，以便扩充
-        {"", "", ""},         // 14
-        {"{", "{", "-"},      // 15
-        {"}", "}", "-"},      // 16
-        {"", "id", ""},       // 17标示符
-        {"", "num", ""},      // 18数字（常数和实数）
+        {"", "", ""},    // 13空余出来，以便扩充
+        {"", "", ""},    // 14
+        {"", "id", ""},  // 15标示符
+        {"", "num", ""}, // 16数字（常数和实数）
+        {"{", "{", "-"}, // 17
+        {"}", "}", "-"}, // 18
+
         {"+", "+", "-"},      // 19
         {"-", "-", "-"},      // 20
         {"*", "*", "-"},      // 21
@@ -98,7 +105,11 @@ int Initscanner()
     return 0;
 }
 
-//写入文件
+/*********************************************
+ @Description: 写入文件
+ @param {int n, int m}
+ @return {void}
+*********************************************/
 void Output(int n, int m)
 {
     //在文件中写入二元组（Key[n].keySign，
@@ -129,8 +140,8 @@ void remove1()
 int Isalpha()
 {
     int i;
-    // 关键字，16个关键字，循环匹配
-    for (i = 0; i < 16; i++)
+    // 关键字，12个关键字，循环匹配
+    for (i = 0; i < 12; i++)
     { //判断token是否等于Key[i].keyWord
         if (strcmp(token, Key[i].keyWord) == 0)
         {
@@ -145,7 +156,7 @@ int Isalpha()
         //如果标示符表【i】位置不为空，并且标示符表【i】中存在该标示符
         if ((Word[i][0] != NULL) && strcmp(token, Word[i]) == 0)
         {
-            Output(16, i);
+            Output(14, i);
             return 0;
         }
         //如果标示符表【i】位置为空
@@ -153,7 +164,7 @@ int Isalpha()
         {
             //将token中的值复制到标示符表Word[i]中
             strcpy(Word[i], token);
-            Output(16, i);
+            Output(14, i);
             return 0;
         }
     }
@@ -168,7 +179,7 @@ int Isnumber()
         //如果数字表(consts[i]位置不为空，并且数字表中存在该数字
         if ((consts[i][0] != NULL) && strcmp(token, consts[i]) == 0)
         {
-            Output(17, i);
+            Output(15, i);
             return 0;
         }
         // 如果数字表(consts[i]位置为空
@@ -176,7 +187,7 @@ int Isnumber()
         {
             //将token中的值复制到数字表consts[i]中
             strcpy(consts[i], token);
-            Output(17, i);
+            Output(15, i);
             return 0;
         }
     }
@@ -263,7 +274,7 @@ void Isother()
     token[i] = '\0';
     //匹配字符表是否存在该字符
 
-    for (i = 18; i < 45; i++)
+    for (i = 16; i < 45; i++)
     {
         if (strcmp(token, Key[i].keyWord) == 0)
         {
@@ -293,7 +304,7 @@ void Scanner()
             ch = getc(in);
         }
         // 标识符 isalpha(ch)单词
-        if (((ch >= 'a') && (ch <= 'z')) || (ch == '_'))
+        if (((ch >= 'a') && (ch <= 'z')) || (ch == '_') || ((ch >= 'A') && (ch <= 'Z')))
         {
             i = 1;
             token[0] = ch;

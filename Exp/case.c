@@ -1,19 +1,18 @@
 /*********************************************
  @Author       : Mr.Wang
- @Date         : 2021-10-12 22:35:48
+ @Date         : 2021-10-16 23:37:31
  @FilePath     : /case.c
  @Description  : message
 *********************************************/
-#include <stdio.h>
-
-int fib()
-{
-    return 6;
-}
-
+int a;
+int b;
+int c;
 int main()
 {
-    int t = fib();
-    printf("Hello world!");
-    return 0;
+    a = getint();
+    b = getint();
+    c = getint();
+    int d;
+    d = a + b * c;
+    return d;
 }

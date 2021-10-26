@@ -1,0 +1,12 @@
+{
+  "files.associations": {
+    "semaphore.h": "c",
+    "test.C": "cpp",
+    "typeinfo": "c",
+    "types.h": "c",
+    "*.cjson": "jsonc",
+    "*.wxss": "css",
+    "*.wxs": "javascript",
+    "ctype.h": "c"
+  }
+}
