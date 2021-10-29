@@ -1,61 +1,58 @@
 %{
-#include <stdio.h>
-#include <stdlib.h>
-
+enum yytokentype{
+        INT = 1,RETURN,VOID,CONST,IF,ELSE,CONTINUE,WHILE,MAIN,BREAK,IDN,NUM,ADD,
+        SUB,MUL,DIV,MOD,LT,GT,LE,GE,ASSIGN,NE,EQ,OR,AND,NOT,LP,RP,SLP,SRP,MLP,MRP,COMMA,SEMI,COMMENT,COMMENTS
+};
+int yylval;
 %}
 
-INTERGER   [0-9]
-OCTALCONS  0[0-7]+
-HEXCONS    0[xX][0-9a-fA-F]+
+DIGIT   [0-9]
 NOTE_S     \/\/(.)*\n
 NOTE_M     \/\*(.|\n)*?\*\/
 IDENTIFIER [_a-zA-Z][_a-zA-Z0-9]*
+SPACE      [ \t\r\n]+
 
 
 %%
+"int"                       {return INT;}
+"return"                    {return RETURN;}
+"void"                      {return VOID;}
+"const"                     {return CONST;}
+"if"                        {return IF;}
+"else"                      {return ELSE;}
+"continue"                  {return CONTINUE;}
+"while"                     {return WHILE;}
+"main"                      {return MAIN;}
+"break"                     {return BREAK;}
+"+"                         {return ADD;}
+"-"                         {return SUB;}
+"*"                         {return MUL;}
+"/"                         {return DIV;}
+"%"                         {return MOD;}
+"<"                         {return LT;}
+">"                         {return GT;}
+"<="                        {return LE;}
+">="                        {return GE;}
+"="                         {return ASSIGN;}
+"!="                        {return NE;}
+"=="                        {return EQ;}
+"||"                        {return OR;}
+"&&"                        {return AND;}
+"!"                         {return NOT;}
+"{"                         {return LP;}
+"}"                         {return RP;}
+"("                         {return SLP;}
+")"                         {return SRP;}
+"["                         {return MLP;}
+"]"                         {return MRP;}
+","                         {return COMMA;}
+";"                         {return SEMI;}
 
-"int"                       {printf("258\n");}
-"continue"                  {printf("265\n");}
-"const"                     {printf("260\n");}
-"else"                      {printf("262\n");}
-"if"                        {printf("261\n");}
-"return"                    {printf("266\n");}
-"void"                      {printf("259\n");}
-"while"                     {printf("263\n");}
-"break"                     {printf("264\n");}
-"+"                         {printf("267\n");}
-"-"                         {printf("268\n");}
-"*"                         {printf("269\n");}
-"/"                         {printf("270\n");}
-"%"                         {printf("271\n");}
-"<"                         {printf("272\n");}
-"<="                        {printf("273\n");}
-">"                         {printf("274\n");}
-">="                        {printf("275\n");}
-"!="                        {printf("276\n");}
-"=="                        {printf("277\n");}
-"!"                         {printf("278\n");}
-"&&"                        {printf("279\n");}
-"||"                        {printf("280\n");}
-"="                         {printf("281\n");}
-"("                         {printf("282\n");}
-")"                         {printf("283\n");}
-"{"                         {printf("284\n");}
-"}"                         {printf("285\n");}
-"["                         {printf("286\n");}
-"]"                         {printf("287\n");}
-","                         {printf("288\n");}
-";"                         {printf("289\n");}
-" "                         {}
-"\t"                        {}
-"\n"                        {}
-
-{NOTE_S}*                   {}
-{NOTE_M}*                   {}
-{INTERGER}+"."*{INTERGER}* 	{printf("257 %s\n",yytext);}
-{OCTALCONS}                 {printf("257 %s\n",yytext);}
-{HEXCONS}                   {printf("257 %s\n",yytext);}
-{IDENTIFIER}                {printf("256 %s\n",yytext);}
+{SPACE}                     {}
+{NOTE_S}*                   {return COMMENT;}
+{NOTE_M}*                   {return COMMENTS;}
+{DIGIT}+"."*{DIGIT}* 	    {yylval=atoi(yytext);return NUM;}
+{IDENTIFIER}                {return IDN;}
 
 %%
 
@@ -63,6 +60,17 @@ int yywrap(){
     return 1;
 }
 
-void main(int argc, char **argv){
-    yylex();
+main(int argc, char **argv){
+    int tok;
+
+	while(tok = yylex()) 
+	{
+		printf("%d", tok);
+		if(tok == NUM) 
+			printf(" = %d\n", yylval);
+		else if(tok == IDN)
+            printf(" = %s\n", yytext);
+        else
+			printf("\n");
+	}
 }

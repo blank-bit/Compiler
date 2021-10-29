@@ -10,7 +10,7 @@
 #include <string.h>
 
 #define MAX 30
-#define KEY_NUM 43
+#define KEY_NUM 37
 
 FILE *in;
 char token[MAX]; //字符组，存放构成单词符号的字符串
@@ -19,96 +19,80 @@ typedef struct Key_word // 保留字和特殊符号表结构
 {
     char keyWord[MAX]; // 单词符号
     char keySign[MAX]; //助记符
-} Key_word;            //初始化保留字表
+    char keyvalue[MAX];
+} Key_word; //初始化保留字表
 
 Key_word Key[KEY_NUM] = {
 
-    {"int", "int"},           // 0保留字
-    {"do", "do"},             // 1
-    {"return", "return"},     // 2
-    {"void", "void"},         // 3
-    {"const", "const"},       // 4
-    {"for", "for"},           // 5
-    {"if", "if"},             // 6
-    {"else", "else"},         // 7
-    {"continue", "continue"}, // 8
-    {"while", "while"},       // 9
-    {"main", "main"},         // 10
-    {"break", "break"},       // 11
+    {"int", "INT", "-"},           // 0保留字
+    {"return", "RETURN", "-"},     // 1
+    {"void", "VOID", "-"},         // 2
+    {"const", "CONST", "-"},       // 3
+    {"if", "IF", "-"},             // 4
+    {"else", "ELSE", "-"},         // 5
+    {"continue", "CONTINUE", "-"}, // 6
+    {"while", "WHILE", "-"},       // 7
+    {"main", "MAIN", "-"},         // 8
+    {"break", "BREAK", "-"},       // 9
 
-    {"", "id"},  // 12标识符
-    {"", "num"}, // 13数字（常数和实数）
+    {"", "IDN", ""}, // 10标识符
+    {"", "NUM", ""}, // 11数字（常数和实数）
 
-    {"+", "+"},    // 14 界符运算符
-    {"-", "-"},    // 15
-    {"*", "*"},    // 16
-    {"/", "/"},    // 17
-    {"%", "%"},    // 18
-    {"<", "<"},    // 19
-    {">", ">"},    // 20
-    {"<=", "<="},  // 21
-    {">=", ">="},  // 22
-    {"=", "="},    // 23
-    {"!=", "!="},  // 24
-    {"+=", "+="},  // 25
-    {"-=", "-="},  // 26
-    {"*=", "*="},  // 27
-    {"/=", "/="},  // 28
-    {"%=", "%="},  // 29
-    {"|", "|"},    //30
-    {"&", "&"},    //31
-    {"||", "or"},  // 32
-    {"&&", "and"}, // 33
-    {"!", "not"},  // 34
-    {"{", "{"},    // 35
-    {"}", "}"},    // 36
-    {"(", "("},    // 37
-    {")", ")"},    // 38
-    {"[", "["},    // 39
-    {"]", "]"},    // 40
-    {",", ","},    // 41
-    {";", ";"},    // 42
+    {"+", "ADD", "+"},            // 12 界符运算符
+    {"-", "SUB", "-"},            // 13
+    {"*", "MUL", "*"},            // 14
+    {"/", "DIV", "/"},            // 15
+    {"%", "MOD", "%"},            // 16
+    {"<", "LT", "<"},             // 17
+    {">", "GT", ">"},             // 18
+    {"<=", "LE", "<="},           // 19
+    {">=", "GE", ">="},           // 20
+    {"=", "ASSIGN", "="},         // 21
+    {"!=", "NE", "!="},           // 22
+    {"==", "EQ", "=="},           // 23
+    {"||", "OR", "||"},           // 24
+    {"&&", "AND", "&&"},          // 25
+    {"!", "NOT", "!"},            // 26
+    {"{", "LP", "{"},             // 27
+    {"}", "RP", "}"},             // 28
+    {"(", "SLP", "("},            // 29
+    {")", "SRP", ")"},            // 30
+    {"[", "MLP", "["},            // 31
+    {"]", "MRP", "]"},            // 32
+    {",", "COMMA", ","},          // 33
+    {";", "SEMI", ";"},           // 34
+    {"//", "COMMENT", "//"},      // 35
+    {"/**/", "COMMENTS", "/**/"}, // 36
 };
 
-int Init()
+void Output(char token[], int m)
 {
-    char file[MAX];
-    // printf("输入要分析的文件：");
-    // scanf("%s", file);
-    // printf("\n%s", file);
-    if ((in = fopen("case.c", "r")) == NULL)
-    {
-        printf("cannot open file!\n");
-        return 0;
-    }
-    return 0;
-}
-
-void Output(char s[], char token[])
-{
-    printf("< %s, %s >\n", s, token);
+    if (m == 11 || m == 10)
+        printf("< %s, %s >\n", Key[m].keySign, token);
+    else
+        printf("< %s, %s >\n", Key[m].keySign, Key[m].keyvalue);
 }
 
 void IsAlpha()
 {
     int i;
 
-    for (i = 0; i < 12; i++)
+    for (i = 0; i < 10; i++)
     {
         if (strcmp(token, Key[i].keyWord) == 0)
         {
-            Output("关键字", token);
+            Output(token, i);
             break;
         }
     }
 
-    if (i == 12)
-        Output("标识符", token);
+    if (i == 10)
+        Output(token, i);
 }
 
 void IsNumber()
 {
-    Output("常数", token);
+    Output(token, 11);
 }
 
 void IsAnotation()
@@ -116,16 +100,12 @@ void IsAnotation()
     char ch, pre;
     ch = fgetc(in);
 
-    if (ch == '=')
-    {
-        Output("运算符", "/=");
-    }
-    else if (ch == '/')
+    if (ch == '/')
     {
         ch = fgetc(in);
         while (ch != '\n')
             ch = fgetc(in);
-        Output("界符", "//");
+        Output("//", 35);
     }
     else if (ch == '*')
     {
@@ -138,15 +118,14 @@ void IsAnotation()
             ch = fgetc(in);
         }
 
-        Output("界符", "/**/");
-        // printf("界符,/**/");
+        Output("/**/", 36);
     }
     else
     {
         // int fseek( FILE *stream, long offset, int origin );stream为文件指针 offset为偏移量，正数表示正向偏移，负数表示负向偏移
         // SEEK_SET： 文件开头 SEEK_CUR： 当前位置 SEEK_END： 文件结尾
         fseek(in, -1, SEEK_CUR);
-        Output("运算符", "/");
+        Output("/", 15);
     }
 }
 
@@ -154,6 +133,7 @@ void IsOther()
 {
     int i = 1;
     int j = 0;
+    int n;
     char ch;
 
     if (token[0] == '<' || token[0] == '>' || token[0] == '!' || token[0] == '%' ||
@@ -164,12 +144,18 @@ void IsOther()
         {
             token[i++] = ch;
             token[i++] = '\0';
-            Output("运算符", token);
+            for (n = 19; n < 24; n++)
+                if (strcmp(Key[n].keyWord, token) == 0)
+                    break;
+            Output(token, n);
         }
         else
         {
             token[i++] = '\0';
-            Output("运算符", token);
+            for (n = 12; n < 27; n++)
+                if (strcmp(Key[n].keyWord, token) == 0)
+                    break;
+            Output(token, n);
             fseek(in, -1, SEEK_CUR);
         }
         return;
@@ -181,12 +167,11 @@ void IsOther()
         {
             token[i++] = ch;
             token[i++] = '\0';
-            Output("界符", token);
+            Output(token, 24);
         }
         else
         {
-            token[i++] = '\0';
-            Output("界符", token);
+            printf("非法字符：%s\n", token);
             fseek(in, -1, SEEK_CUR);
         }
         return;
@@ -198,12 +183,11 @@ void IsOther()
         {
             token[i++] = ch;
             token[i++] = '\0';
-            Output("界符", token);
+            Output(token, 25);
         }
         else
         {
-            token[i++] = '\0';
-            Output("界符", token);
+            printf("非法字符：%s\n", token);
             fseek(in, -1, SEEK_CUR);
         }
         return;
@@ -211,17 +195,16 @@ void IsOther()
 
     token[i++] = '\0';
 
-    for (i = 35; i < 43; i++)
+    for (i = 27; i < 35; i++)
     {
         if (strcmp(token, Key[i].keyWord) == 0)
         {
-            Output("界符", token);
-            // break;
+            Output(token, i);
             return;
         }
     }
 
-    if (i == 43)
+    if (i == 35)
         printf("非法字符：%s\n", token);
 }
 
@@ -277,7 +260,7 @@ void Scanner()
             token[i++] = '\0';
             IsNumber();
         }
-        else if (ch == '/') // 区分 "/" , "/=" , "/*"
+        else if (ch == '/') // 区分 "/" , "/*"
         {
             i = 1;
             token[0] = ch;
@@ -296,15 +279,20 @@ void Scanner()
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
     //初始化
-    Init();
-    // printf("Init");
+    if (argc != 2)
+    {
+        printf("input file is needed.\n");
+        return 0;
+    }
+    if ((in = fopen(argv[1], "r")) == NULL)
+    {
+        printf("cannot open file!\n");
+        return 0;
+    }
     Scanner();
-    // printf("\n 共有 %d 个错误 \n", num);
-    // show();
     fclose(in);
-    // fclose(out);
     return 0;
 }
