@@ -20,5 +20,5 @@ int main()
     int a[] = {};
     int d;
     d = a + b * c;
-    return d;
+    return 0;
 }
