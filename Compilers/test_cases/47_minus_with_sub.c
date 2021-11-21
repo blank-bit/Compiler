@@ -1,5 +1,6 @@
 // Use minus with sub in one expr
-int main () {
+int main()
+{
     int a;
     int b;
     a = -2;
