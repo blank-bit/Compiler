@@ -1985,7 +1985,8 @@ int isFuncDef(){
 			unput(c);
 			yyless(0);
 			return 1;
-		}else if(c == ' '){
+		}else if(c == ' ')
+		{
 			c = input();
 			if(c == '(' ){
 				unput(' ');
@@ -1993,14 +1994,15 @@ int isFuncDef(){
 				yyless(0);
 				return 1;
 			}
+			unput(' ');
 			unput(c);
 			yyless(0);
 			return 0;
-			}else {
+		}else {
 				unput(c);
 				yyless(0);
 				return 0;
-			}
+		}
 	}else{
 		yyless(0);
 		return 0;
@@ -2011,13 +2013,12 @@ int isFuncDef(){
 
 void put_back(char* yytext)
 {
-	// char *Str = strdup(yytext);
-	// int len = strlen(Str);
-	// int i = len - 1;
-	// while(i>=0){
-	// 	unput(Str[i]);
-	// 	i--;
-	// }
-	yyless(0);
+	char *Str = strdup(yytext);
+	int len = strlen(Str);
+	int i = len - 1;
+	while(i>=0){
+		unput(Str[i]);
+		i--;
+	}
 	unput(' ');
 }

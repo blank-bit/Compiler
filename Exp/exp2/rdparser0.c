@@ -11,7 +11,6 @@ enum yytokentype
 	ELSE,
 	CONTINUE,
 	WHILE,
-	MAIN,
 	BREAK,
 	IDN,
 	NUM,
@@ -47,6 +46,7 @@ extern int yylval;
 extern char *yytext;
 extern FILE *yyin;
 extern int isFuncDef();
+extern void put_back(char *yytext);
 
 int tok;
 
@@ -177,7 +177,7 @@ past newType(int type)
 past newIdent(char *IDN, past next)
 {
 	past var = newAstNode();
-	var->nodeType = "VarDecl";
+	var->nodeType = "Variable";
 	var->value.svalue = IDN;
 	var->next = next;
 	return var;
@@ -249,30 +249,38 @@ void showAst(past node, int nest)
 	int i = 0;
 	for (i = 0; i < nest; i++)
 		printf("  ");
-	if (node->nodeType == "IntValue")
+	if (node->nodeType == "ElseStmt")
+		printf("%s\n", node->nodeType);
+	else if (node->nodeType == "ArrayIndex")
+	{
+		printf("%s\n", node->nodeType);
+	}
+	else if (node->nodeType == "IntValue")
 		printf("%s : %d\n", node->nodeType, node->value.ivalue);
-	else if (node->nodeType == "decl")
-		printf("%s : \n", node->nodeType);
+	else if (node->nodeType == "Decl")
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "ConstDecl")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "ConstDef")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "VarDef")
-		printf("%s : %s\n", node->nodeType, node->value.svalue);
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "ConstInitVal")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "InitVal")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "FuncDef")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
+	else if (node->nodeType == "FuncRefer")
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "FuncFParams")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "FuncFParam")
-		printf("%s : \n", node->nodeType);
-	else if (node->nodeType == "noexp")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
+	else if (node->nodeType == "EmptyStmt")
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "CompUnit")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "expr")
 	{
 		if (node->value.svalue == "@")
@@ -280,14 +288,16 @@ void showAst(past node, int nest)
 		else
 			printf("%s : %s\n", node->nodeType, node->value.svalue);
 	}
-	else if (node->nodeType == "list")
+	else if (node->nodeType == "Count")
 		printf("%s : %d\n", node->nodeType, node->value.ivalue);
+	else if (node->nodeType == "Variable")
+		printf("%s : %s\n", node->nodeType, node->value.svalue);
 	else if (node->nodeType == "VarDecl")
+		printf("%s\n", node->nodeType);
+	else if (node->nodeType == "ArrayID")
 		printf("%s : %s\n", node->nodeType, node->value.svalue);
-	else if (node->nodeType == "ArrayDecl")
-		printf("%s : %s\n", node->nodeType, node->value.svalue);
-	else if (node->nodeType == "FuncDecl" || node->nodeType == "BlockDecl")
-		printf("%s : \n", node->nodeType);
+	else if (node->nodeType == "FuncDecl" || node->nodeType == "Block")
+		printf("%s\n", node->nodeType);
 	else if (node->nodeType == "parameter")
 		printf("%s : %s\n", node->nodeType, node->value.svalue);
 	else if (node->nodeType == "type")
@@ -295,7 +305,7 @@ void showAst(past node, int nest)
 	else if (node->nodeType == "ArrayDecl")
 		printf("%s : %s\n", node->nodeType, node->value.svalue);
 	else if (node->nodeType == "AssignStmt" || node->nodeType == "IfStmt" || node->nodeType == "WhileStmt" || node->nodeType == "BreakStmt" || node->nodeType == "ContinueStmt" || node->nodeType == "ReturnStmt" || node->nodeType == "EmptyStmt" || node->nodeType == "expStmt")
-		printf("%s : \n", node->nodeType);
+		printf("%s\n", node->nodeType);
 
 	showAst(node->left, nest + 1);
 	showAst(node->right, nest + 1);
@@ -333,55 +343,51 @@ past CompUnit()
 	}
 	else if (tok == INT)
 	{
-		// printf("0");
 		if (isFuncDef())
 		{
-			// printf("1");
-			tmp->next = FuncDef();
-			if (tmp->next == NULL)
+			tmp->left = FuncDef();
+			if (tmp->left == NULL)
 				return NULL;
 		}
 		else
 		{
-			// printf("2");
-			// return NULL;
-			tmp->next = Decl();
-			if (tmp->next == NULL)
+			tmp->left = Decl();
+			if (tmp->left == NULL)
 				return NULL;
 		}
 	}
-
+	tmp = tmp->left;
 	while (tok > 0)
 	{
-		tmp = tmp->next;
 		if (tok == COMMENT || tok == COMMENTS)
 		{
 			advance();
 		}
 		else if (tok == CONST)
 		{
-			tmp->left = Decl();
+			tmp->next = Decl();
 		}
 		else if (tok == VOID)
 		{
-			tmp->left = FuncDef();
+			tmp->next = FuncDef();
 		}
 		else if (tok == INT)
 		{
 			if (isFuncDef())
 			{
-				tmp->left = FuncDef();
+				tmp->next = FuncDef();
 			}
 			else
 			{
-				tmp->left = Decl();
+				tmp->next = Decl();
 			}
 		}
 		else
 		{
-			printf("118ERROR!\n");
+			printf("118ERROR! %s\n", yytext);
 			exit(0);
 		}
+		tmp = tmp->next;
 	}
 	return l;
 }
@@ -389,14 +395,14 @@ past CompUnit()
 // 声明 Decl → ConstDecl | VarDecl
 past Decl()
 {
-	past l = newAstNode_param("", "Decl", NULL, NULL, NULL);
+	past l = newAstNode();
 	if (tok == CONST)
 	{
-		l->left = ConstDecl();
+		l = ConstDecl();
 	}
 	else if (tok == INT)
 	{
-		l->left = VarDecl();
+		l = VarDecl();
 	}
 	else
 	{
@@ -415,8 +421,8 @@ past ConstDecl()
 		advance();
 		tmp->left = BType();
 		tmp = tmp->left;
-		tmp->left = ConstDef();
-		tmp = tmp->left;
+		tmp->next = ConstDef();
+		tmp = tmp->next;
 		while (tok == COMMA)
 		{
 			advance();
@@ -456,14 +462,51 @@ past ConstDef()
 	past tmp = l;
 	if (tok == IDN)
 	{
-		past idn = newIdent(strdup(yytext), NULL);
-		tmp->left = idn;
-		tmp = tmp->left;
+		char *s = strdup(yytext);
+		tok = yylex();
+		if (tok == MLP)
+		{
+			past idn = newIdent(s, NULL);
+			idn->nodeType = "ArrayID";
+			tmp->left = idn;
+			tmp = tmp->left;
+		}
+		else
+		{
+			past idn = newIdent(s, NULL);
+			tmp->left = idn;
+			tmp = tmp->left;
+		}
+		put_back(yytext);
 		advance();
+		if (tok == MLP)
+		{
+			advance();
+			past index = newAstNode();
+			index->nodeType = "ArrayIndex";
+			index->left = ConstExp();
+			// tmp->left->nodeType = "ArrayIndex";
+			tmp->left = index;
+			tmp = tmp->left;
+			if (tok == MRP)
+			{
+				advance();
+			}
+			else
+			{
+				printf("189ERROR:Expect a ']'\n");
+				exit(0);
+			}
+		}
+
 		while (tok == MLP)
 		{
 			advance();
-			tmp->next = ConstExp();
+			past index = newAstNode();
+			index->nodeType = "ArrayIndex";
+			index->left = ConstExp();
+			tmp->next = index;
+			// tmp->next->nodeType = "ArrayIndex";
 			tmp = tmp->next;
 			if (tok == MRP)
 			{
@@ -478,7 +521,7 @@ past ConstDef()
 		if (tok == ASSIGN)
 		{
 			advance();
-			tmp->left = ConstInitVal();
+			l->right = ConstInitVal();
 		}
 		else
 		{
@@ -493,10 +536,8 @@ past ConstDef()
 // 						| '{' [ ConstInitVal { ',' ConstInitVal } ] '}'
 past ConstInitVal()
 {
-	past list = newAstNode_param("", "list", NULL, NULL, NULL);
-	past l = newAstNode_param("", "ConstInitVal", list, NULL, NULL);
-	list->value.ivalue = 0;
-	past tmp = list;
+	past l = newAstNode_param("", "ConstInitVal", NULL, NULL, NULL);
+	past tmp = l;
 	if (tok == LP)
 	{
 		advance();
@@ -521,8 +562,6 @@ past ConstInitVal()
 			exit(0);
 		}
 	}
-
-	tmp->value.ivalue++;
 	tmp->left = ConstExp();
 	return l;
 }
@@ -531,17 +570,14 @@ past ConstInitVal()
 past VarDecl()
 {
 	past type = BType();
-	past list = newAstNode_param("", "list", NULL, NULL, NULL);
-	past l = newAstNode_param("", "VarDecl", type, list, NULL);
-	l->right->value.ivalue = 0;
-	past var = VarDef();
-	list->value.ivalue++;
-	list->left = var;
-	past tmp = var;
+	past l = newAstNode_param("", "VarDecl", type, NULL, NULL);
+	l->right = VarDef();
+	past tmp = l->right;
+	if (!tmp)
+		printf("null\n");
 	while (tok == COMMA)
 	{
 		advance();
-		list->value.ivalue++;
 		tmp->next = VarDef();
 		tmp = tmp->next;
 	}
@@ -557,34 +593,49 @@ past VarDecl()
 // 					| Ident { '[' ConstExp ']' } '=' InitVal
 past VarDef()
 {
-	past root;
+	past root = newAstNode_param("", "VarDef", NULL, NULL, NULL);
 	if (tok == IDN)
 	{
-		past l = newAstNode_param(strdup(yytext), "VarDecl", NULL, NULL, NULL);
-		root = newAstNode_param(".", "VarDef", l, NULL, NULL);
-		advance();
-		past list = newAstNode_param("", "list", NULL, NULL, NULL);
-		root->left->left = list;
-		root->left->left->value.ivalue = 0;
-		past tmp = NULL;
+		past tmp = root;
+		char *s = strdup(yytext);
+		past idn = newIdent(s, NULL);
+		tok = yylex();
 		if (tok == MLP)
 		{
-			root->left->nodeType = "ArrayDecl";
+			idn->nodeType = "ArrayID";
+			tmp->left = idn;
+			tmp = tmp->left;
+		}
+		else
+		{
+			tmp->left = idn;
+			tmp = tmp->left;
+		}
+		put_back(yytext);
+
+		advance();
+
+		if (tok == MLP)
+		{
 			advance();
-			past head = ConstExp();
-			root->left->left->left = head;
-			root->left->left->value.ivalue++;
-			past tmp = head;
+			past index = newAstNode();
+			index->nodeType = "ArrayIndex";
+			index->left = ConstExp();
+			tmp->left = index;
+			// tmp->left->nodeType = "ArrayIndex";
+			tmp = tmp->left;
 			if (tok == MRP)
 			{
 				advance();
 				while (tok == MLP)
 				{
 					advance();
-					past first = ConstExp();
-					tmp->next = first;
+					past index = newAstNode();
+					index->nodeType = "ArrayIndex";
+					index->left = ConstExp();
+					tmp->next = index;
+					// tmp->next->nodeType = "ArrayIndex";
 					tmp = tmp->next;
-					root->left->left->value.ivalue++;
 					if (tok == MRP)
 					{
 						advance();
@@ -593,8 +644,7 @@ past VarDef()
 				if (tok == ASSIGN)
 				{
 					advance();
-					past init = InitVal();
-					root->right = init;
+					root->right = InitVal();
 					return root;
 				}
 				else
@@ -606,8 +656,11 @@ past VarDef()
 		else if (tok == ASSIGN)
 		{
 			advance();
-			past rightnode = InitVal();
-			root->right = rightnode;
+			root->right = InitVal();
+			return root;
+		}
+		else
+		{
 			return root;
 		}
 	}
@@ -616,34 +669,27 @@ past VarDef()
 		printf("281ERROR:Expect a Ident\n");
 		exit(0);
 	}
-	return root;
 }
 
 // 变量初值 InitVal → Exp | '{' [ InitVal { ',' InitVal } ] '}'
 past InitVal()
 {
-	past list = newAstNode_param("", "list", NULL, NULL, NULL);
-	past l = newAstNode_param("", "InitVal", list, NULL, NULL);
-	list->value.ivalue = 0;
-	past tmp = list;
+	past l = newAstNode_param("", "InitVal", NULL, NULL, NULL);
+	past tmp = l;
 	if (tok == LP)
 	{
 		advance();
 		if (tok == IDN || tok == NUM || tok == SUB || tok == ADD || tok == NOT || tok == SLP)
 		{
-			if (tmp->left != NULL)
+			tmp->left = InitVal();
+			tmp = tmp->left;
+			while (tok == COMMA)
 			{
-				tmp = tmp->left;
-				list->value.ivalue++;
-				while (tok == COMMA)
-				{
-					advance();
-					tmp->next = InitVal();
-					if (tmp->next == NULL)
-						return NULL;
-					tmp = tmp->next;
-					list->value.ivalue++;
-				}
+				advance();
+				tmp->next = InitVal();
+				if (tmp->next == NULL)
+					return NULL;
+				tmp = tmp->next;
 			}
 		}
 		if (tok == RP)
@@ -657,8 +703,7 @@ past InitVal()
 			exit(0);
 		}
 	}
-	list->value.ivalue++;
-	list->left = Exp();
+	tmp->left = Exp();
 	return l;
 }
 
@@ -667,25 +712,24 @@ past FuncDef()
 {
 	past l = newAstNode();
 	l->nodeType = "FuncDef";
-	past type = FuncType();
-	l->left = type;
-	if (tok == IDN || tok == MAIN)
+	l->left = FuncType();
+	past tmp = l->left;
+	if (tok == IDN)
 	{
 		past idn = newIdent(strdup(yytext), NULL);
-		type->left = idn;
+		tmp->next = idn;
+		tmp = tmp->next;
 		advance();
 		if (tok == SLP)
 		{
 			advance();
 			if (tok == INT)
 			{
-				past FuncFParam = FuncFParams();
-				idn->left = FuncFParam;
+				tmp->next = FuncFParams();
 				if (tok == SRP)
 				{
 					advance();
-					past block = Block();
-					l->right = block;
+					l->right = Block();
 					return l;
 				}
 				else
@@ -699,8 +743,7 @@ past FuncDef()
 				if (tok == SRP)
 				{
 					advance();
-					past block = Block();
-					l->right = block;
+					l->right = Block();
 					return l;
 				}
 			}
@@ -715,7 +758,6 @@ past FuncDef()
 		printf("355ERROR:Expect a Ident\n");
 		exit(0);
 	}
-	return l;
 }
 
 // 函数类型 FuncType → 'void' | 'int'
@@ -743,24 +785,23 @@ past FuncType()
 // 函数形参表 FuncFParams → FuncFParam { ',' FuncFParam }
 past FuncFParams()
 {
-	int list = 0;
-	past l = newAstNode_param("", "list", NULL, NULL, NULL);
+	past l = newAstNode_param("", "Count", NULL, NULL, NULL);
 	past root = newAstNode_param("", "FuncFParams", l, NULL, NULL);
-	root->left->value.ivalue = list;
-	past head = FuncFParam();
-	root->left->left = head;
-	root->left->value.ivalue++;
+	l->value.ivalue = 0;
+	l->left = FuncFParam();
+	l->value.ivalue++;
+	past tmp = l->left;
 	while (tok == COMMA)
 	{
 		advance();
-		root->left->value.ivalue++;
-		head->next = FuncFParam();
-		if (head->next == NULL)
+		l->value.ivalue++;
+		tmp->next = FuncFParam();
+		if (tmp->next == NULL)
 		{
 			printf("748Error: astFuncFParam()\n");
 			return NULL;
 		}
-		head = head->next;
+		tmp = tmp->next;
 	}
 	return root;
 }
@@ -768,39 +809,51 @@ past FuncFParams()
 // 函数形参 FuncFParam → BType Ident ['[' ']' { '[' Exp ']' }]
 past FuncFParam()
 {
-	int list = 0;
 	past leftint = BType();
 	past root = NULL;
 	if (tok == IDN)
 	{
-		past r = newIdent(strdup(yytext), NULL);
-		past root = newAstNode_param("", "FuncFParam", leftint, r, NULL);
+		root = newAstNode_param("", "FuncFParam", leftint, NULL, NULL);
+		past tmp = root;
+		char *s = strdup(yytext);
+		past idn = newIdent(s, NULL);
+		tok = yylex();
+		if (tok == MLP)
+		{
+			idn->nodeType = "ArrayID";
+			tmp->right = idn;
+			tmp = tmp->right;
+		}
+		else
+		{
+			tmp->right = idn;
+			tmp = tmp->right;
+		}
+		put_back(yytext);
 		advance();
-		past listnode = newAstNode_param("", "list", NULL, NULL, NULL);
-		root->right->left = listnode;
-		root->right->left->value.ivalue = list;
-		past tmp = NULL;
 		if (tok == MLP)
 		{
 			advance();
 			if (tok == MRP)
 			{
-				past head = newAstNode_param("", "noexp", NULL, NULL, NULL);
-				root->right->left->left = head;
-				root->right->left->value.ivalue++;
-				tmp = head;
+				past index = newAstNode();
+				index->nodeType = "ArrayIndex";
+				tmp->left = index;
+				tmp = tmp->left;
 				advance();
 				while (tok == MLP)
 				{
 					advance();
-					tmp->next = Exp();
+					index = newAstNode();
+					index->nodeType = "ArrayIndex";
+					index->left = Exp();
+					tmp->next = index;
 					if (tmp->next == NULL)
 					{
-						printf("Error: astExp()\n");
+						printf("Error: Exp()\n");
 						return NULL;
 					}
 					tmp = tmp->next;
-					root->right->left->value.ivalue++;
 					if (tok == MRP)
 					{
 						advance();
@@ -831,35 +884,36 @@ past FuncFParam()
 // 语句块 Block → '{' { BlockItem } '}'
 past Block()
 {
-	past list = newAstNode_param("", "list", NULL, NULL, NULL);
-	list->value.ivalue = 0;
-	past block = newAstNode_param("", "BlockDecl", NULL, NULL, NULL);
-	list->left = block;
+	past block = newAstNode_param("", "Block", NULL, NULL, NULL);
 	past tmp = block;
 	if (tok == LP)
 	{
 		advance();
 		if (tok != RP)
 		{
-			list->value.ivalue++;
-			block->left = BlockItem();
-			if (block->left == NULL)
-			{
-				printf("Error: astBlockItem()\n");
-				return NULL;
-			}
-			tmp = block->left;
-		}
-		while (tok == INT || tok == CONST || tok == IDN || tok == RETURN || tok == IF || tok == CONTINUE || tok == WHILE || tok == BREAK || tok == NUM || tok == ADD || tok == SUB || tok == NOT || tok == SLP)
-		{
-			list->value.ivalue++;
 			tmp->left = BlockItem();
-			if (tmp->left == (void *)(0x10) || tmp->left == NULL)
+			if (tmp->left == NULL)
 			{
 				printf("Error: astBlockItem()\n");
 				return NULL;
 			}
 			tmp = tmp->left;
+		}
+		// else
+		// {
+		// 	tmp->left = newAstNode();
+		// 	tmp->left->nodeType = "NullBlock";
+		// 	tmp->left->value.svalue = "NULL";
+		// }
+		while (tok == INT || tok == CONST || tok == IDN || tok == RETURN || tok == IF || tok == CONTINUE || tok == WHILE || tok == BREAK || tok == NUM || tok == ADD || tok == SUB || tok == NOT || tok == SLP || tok == SEMI)
+		{
+			tmp->next = BlockItem();
+			if (tmp->next == NULL)
+			{
+				printf("Error: astBlockItem()\n");
+				return NULL;
+			}
+			tmp = tmp->next;
 		}
 		if (tok == RP)
 		{
@@ -867,7 +921,7 @@ past Block()
 		}
 		else
 		{
-			printf("447ERROR:Expect a '}'\n");
+			printf("%d %s447ERROR:Expect a '}'\n", tok, yytext);
 			exit(0);
 		}
 	}
@@ -876,7 +930,7 @@ past Block()
 		printf("453ERROR:Expect a '{'\n");
 		exit(0);
 	}
-	return list;
+	return block;
 }
 
 // 语句块项 BlockItem → Decl | Stmt
@@ -902,28 +956,27 @@ past Stmt()
 	past root = NULL;
 	if (tok == IF)
 	{
-		int list = 1;
 		root = newAstNode();
 		root->nodeType = "IfStmt";
-		root->right = newAstNode_param("", "list", NULL, NULL, NULL);
-		root->right->value.ivalue = list;
+		past tmp = root;
 		advance();
 		if (tok == SLP)
 		{
 			advance();
-			past cond = Cond();
+			tmp->left = Cond();
+			tmp = tmp->left;
 			if (tok == SRP)
 			{
 				advance();
-				root->right->left = Stmt();
+				tmp->next = Stmt();
 				if (tok == ELSE)
 				{
+					past el = newAstNode();
+					el->nodeType = "ElseStmt";
+					root->right = el;
 					advance();
-					if (root->right->right = Stmt())
-					{
-						root->right->value.ivalue++;
+					if (el->left = Stmt())
 						return root;
-					}
 				}
 				return root;
 			}
@@ -1024,28 +1077,51 @@ past Stmt()
 	}
 	else if (tok == IDN)
 	{
-		root = LVal();
-		if (tok == ASSIGN)
+		int flag = 0;
+		char *s = strdup(yytext);
+		tok = yylex();
+		if (tok == MLP || tok == ASSIGN)
+			flag = 1;
+		put_back(yytext);
+		put_back(s);
+		tok = yylex();
+		if (flag)
 		{
-			advance();
-			past exp = Exp();
-			past head = newAstNode_param("", "AssignStmt", root, exp, NULL);
-			if (tok == SEMI)
+			root = LVal();
+			if (tok == ASSIGN)
 			{
 				advance();
-				return head;
+				past exp = Exp();
+				past head = newAstNode_param("", "AssignStmt", root, exp, NULL);
+				if (tok == SEMI)
+				{
+					advance();
+					return head;
+				}
+				else
+				{
+					printf("593ERROR:Expect a ';'\n");
+					exit(0);
+				}
 			}
 			else
 			{
-				printf("593ERROR:Expect a ';'\n");
+				printf("599ERROR:Expect a '='\n");
 				exit(0);
 			}
 		}
 		else
 		{
-			printf("599ERROR:Expect a '='\n");
-			exit(0);
+			root = Exp();
+			if (tok == SEMI)
+				advance();
 		}
+	}
+	else if (tok == SEMI)
+	{
+		root = newAstNode();
+		root->nodeType = "EmptyStmt";
+		advance();
 	}
 	else
 	{
@@ -1093,23 +1169,24 @@ past LVal()
 		while (tok == MLP)
 		{
 			advance();
-			past exp = Exp();
+			past index = newAstNode();
+			index->nodeType = "ArrayIndex";
+			index->left = Exp();
 			if (flag == 1)
 			{
-				root->left = exp;
-				root->nodeType = "ArrayDecl";
-				tmp = exp;
+				root->left = index;
+				root->nodeType = "ArrayID";
+				tmp = index;
 				flag++;
 			}
 			else
 			{
-				tmp->next = exp;
+				tmp->next = index;
 				tmp = tmp->next;
 			}
 			if (tok == MRP)
 			{
 				advance();
-				return root;
 			}
 			else
 			{
@@ -1117,6 +1194,7 @@ past LVal()
 				exit(0);
 			}
 		}
+		return root;
 	}
 	else
 	{
@@ -1183,18 +1261,26 @@ past UnaryExp()
 	if (tok == IDN)
 	{
 		char *s1 = strdup(yytext);
-		ue = newIdent(strdup(yytext), NULL);
+		tok = yylex();
+		if (tok == SLP)
+			put_back(strdup(yytext));
+		else
+		{
+			put_back(strdup(yytext));
+			put_back(s1);
+			tok = yylex();
+			return LVal();
+		}
+		ue = newIdent(s1, NULL);
 		advance();
 		if (tok == SLP)
 		{
 			advance();
-			if (tok == IDN || tok == NUM || tok == ADD || tok == SUB || tok == NOT || tok == SLP)
 			{
-				past root = newAstNode();
-				root->nodeType = "FuncDecl";
+				root = newAstNode();
+				root->nodeType = "FuncRefer";
 				root->left = ue;
-				past funcRP = FuncRParams();
-				root->right = funcRP;
+				root->right = FuncRParams();
 			}
 			if (tok == SRP)
 			{
@@ -1207,23 +1293,6 @@ past UnaryExp()
 				exit(0);
 			}
 		}
-		// else
-		// {
-		// 	while (tok == MLP)
-		// 	{
-		// 		advance();
-		// 		Exp();
-		// 		if (tok == MRP)
-		// 		{
-		// 			advance();
-		// 		}
-		// 		else
-		// 		{
-		// 			printf("744ERROR:Expect a ']'\n");
-		// 			exit(0);
-		// 		}
-		// 	}
-		// }
 	}
 	else if (tok == ADD || tok == SUB || tok == NOT)
 	{
@@ -1241,6 +1310,7 @@ past UnaryExp()
 	{
 		return PrimaryExp();
 	}
+	return root;
 }
 
 // 单目运算符 UnaryOp → '+' | '−' | '!' 注：'!'仅出现在条件表达式中
@@ -1262,27 +1332,20 @@ past FuncRParams()
 {
 	if (tok == IDN || tok == NUM || tok == ADD || tok == SUB || tok == NOT || tok == SLP)
 	{
-		int list = 1;
 		past root = newAstNode();
-		root->nodeType = "list";
-		past func = Exp();
-		past head = func;
+		root->nodeType = "Count";
+		root->value.ivalue = 1;
+		past tmp = root;
+		tmp->left = Exp();
+		tmp->left->nodeType = "parameter";
+		tmp = tmp->left;
 		while (tok == COMMA)
 		{
-			list++;
+			root->value.ivalue++;
 			advance();
-			past brother = Exp();
-			func->next = brother;
-			func = func->next;
-		}
-		root->value.ivalue = list;
-		root->left = head;
-		head->nodeType = "parameter";
-		head = head->next;
-		while (head != NULL)
-		{
-			head->nodeType = "parameter";
-			head = head->next;
+			tmp->next = Exp();
+			tmp->next->nodeType = "parameter";
+			tmp = tmp->next;
 		}
 		return root;
 	}
@@ -1382,34 +1445,6 @@ past ConstExp()
 {
 	return AddExp();
 }
-
-// int main(int argc, char **argv)
-// {
-// 	FILE *fp;
-// 	if (argv[1])
-// 	{
-// 		if ((fp = fopen(argv[1], "r")))
-// 		{
-// 			printf("reading data from file:%s\n", argv[1]);
-// 		}
-// 		else
-// 		{
-// 			printf("Input Format Wrong!\n");
-// 			return 0;
-// 		}
-// 	}
-// 	else
-// 	{
-// 		printf("Input Format Wrong!\n");
-// 		return 0;
-// 	}
-
-// 	put_scan(fp);
-// 	advance();
-// 	CompUnit();
-// 	printf("program done successfully!\n");
-// 	return 0;
-// }
 
 int main(int argc, char **argv)
 {

@@ -70,7 +70,8 @@ int isFuncDef(){
 			unput(c);
 			yyless(0);
 			return 1;
-		}else if(c == ' '){
+		}else if(c == ' ')
+		{
 			c = input();
 			if(c == '(' ){
 				unput(' ');
@@ -78,14 +79,15 @@ int isFuncDef(){
 				yyless(0);
 				return 1;
 			}
+			unput(' ');
 			unput(c);
 			yyless(0);
 			return 0;
-			}else {
+		}else {
 				unput(c);
 				yyless(0);
 				return 0;
-			}
+		}
 	}else{
 		yyless(0);
 		return 0;

@@ -454,6 +454,10 @@ void Block()
 			exit(0);
 		}
 	}
+	else if (tok == SEMI)
+	{
+		advance();
+	}
 	else
 	{
 		printf("ERROR:Expect a '{'\n");

@@ -353,8 +353,8 @@ past CompUnit(void)
                     put_back(s1);
                     put_back(s0);
                     advance();
-                    tmp->next = FuncDef();
-                    if (tmp->next == NULL)
+                    tmp->left = FuncDef();
+                    if (tmp->left == NULL)
                         return NULL;
                 }
                 else
@@ -363,8 +363,8 @@ past CompUnit(void)
                     put_back(s1);
                     put_back(s0);
                     advance();
-                    tmp->next = Decl();
-                    if (tmp->next == NULL)
+                    tmp->left = Decl();
+                    if (tmp->left == NULL)
                         return NULL;
                 }
             }
@@ -383,7 +383,7 @@ past CompUnit(void)
         }
         if (tok == CONST || tok == VOID || tok == INT)
         {
-            tmp = tmp->next;
+            tmp = tmp->left;
             if (tok == CONST)
             {
                 tmp->left = Decl();
@@ -1461,10 +1461,15 @@ int main(int argc, char **argv)
     setbuf(stdout, NULL);
     advance();
     past root = CompUnit();
-    printf("\n");
-    showAst(root, 0);
-    freeAst(root);
-    printf("\nprogram done successfully!\n");
+    if (root)
+    {
+        printf("\n");
+        showAst(root, 0);
+        freeAst(root);
+        printf("\nprogram done successfully!\n");
+    }
+    else
+        printf("ERROR!\n");
 
     return 0;
 }
