@@ -154,7 +154,7 @@ past newNum(int value, past next)
 past newType(int type)
 {
 	past var = newAstNode();
-	var->nodeType = "type";
+	var->nodeType = "Type";
 	switch (type)
 	{
 	case VOID:
@@ -234,7 +234,7 @@ past newExpr(int oper, past left, past right, past next)
 		var->value.svalue = "@";
 		break;
 	}
-	var->nodeType = "expr";
+	var->nodeType = "Expr";
 	var->left = left;
 	var->right = right;
 	var->next = next;
@@ -249,62 +249,60 @@ void showAst(past node, int nest)
 	int i = 0;
 	for (i = 0; i < nest; i++)
 		printf("  ");
-	if (node->nodeType == "ElseStmt")
+	if (!strcmp(node->nodeType, "FuncName"))
+		printf("%s : %s\n", node->nodeType, node->value.svalue);
+	else if (!strcmp(node->nodeType, "ElseStmt"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "ArrayIndex")
+	else if (!strcmp(node->nodeType, "ArrayIndex"))
 	{
 		printf("%s\n", node->nodeType);
 	}
-	else if (node->nodeType == "IntValue")
+	else if (!strcmp(node->nodeType, "IntValue"))
 		printf("%s : %d\n", node->nodeType, node->value.ivalue);
-	else if (node->nodeType == "Decl")
+	else if (!strcmp(node->nodeType, "ConstDecl"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "ConstDecl")
+	else if (!strcmp(node->nodeType, "ConstDef"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "ConstDef")
+	else if (!strcmp(node->nodeType, "VarDef"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "VarDef")
+	else if (!strcmp(node->nodeType, "ConstInitVal"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "ConstInitVal")
+	else if (!strcmp(node->nodeType, "InitVal"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "InitVal")
+	else if (!strcmp(node->nodeType, "FuncDef"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "FuncDef")
+	else if (!strcmp(node->nodeType, "FuncRefer"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "FuncRefer")
+	else if (!strcmp(node->nodeType, "FuncFParams"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "FuncFParams")
+	else if (!strcmp(node->nodeType, "FuncFParam"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "FuncFParam")
+	else if (!strcmp(node->nodeType, "EmptyStmt"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "EmptyStmt")
+	else if (!strcmp(node->nodeType, "CompUnit"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "CompUnit")
-		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "expr")
+	else if (!strcmp(node->nodeType, "Expr"))
 	{
-		if (node->value.svalue == "@")
+		if (node->value.svalue, "@")
 			printf("%s : '%c'\n", node->nodeType, '@');
 		else
 			printf("%s : %s\n", node->nodeType, node->value.svalue);
 	}
-	else if (node->nodeType == "Count")
+	else if (!strcmp(node->nodeType, "Count"))
 		printf("%s : %d\n", node->nodeType, node->value.ivalue);
-	else if (node->nodeType == "Variable")
+	else if (!strcmp(node->nodeType, "Variable"))
 		printf("%s : %s\n", node->nodeType, node->value.svalue);
-	else if (node->nodeType == "VarDecl")
+	else if (!strcmp(node->nodeType, "VarDecl"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "ArrayID")
+	else if (!strcmp(node->nodeType, "ArrayID"))
 		printf("%s : %s\n", node->nodeType, node->value.svalue);
-	else if (node->nodeType == "FuncDecl" || node->nodeType == "Block")
+	else if (!strcmp(node->nodeType, "Block"))
 		printf("%s\n", node->nodeType);
-	else if (node->nodeType == "parameter")
+	else if (!strcmp(node->nodeType, "FuncRParam"))
 		printf("%s : %s\n", node->nodeType, node->value.svalue);
-	else if (node->nodeType == "type")
+	else if (!strcmp(node->nodeType, "Type"))
 		printf("%s : %s\n", node->nodeType, node->value.svalue);
-	else if (node->nodeType == "ArrayDecl")
-		printf("%s : %s\n", node->nodeType, node->value.svalue);
-	else if (node->nodeType == "AssignStmt" || node->nodeType == "IfStmt" || node->nodeType == "WhileStmt" || node->nodeType == "BreakStmt" || node->nodeType == "ContinueStmt" || node->nodeType == "ReturnStmt" || node->nodeType == "EmptyStmt" || node->nodeType == "expStmt")
+	else if (!strcmp(node->nodeType, "AssignStmt") || !strcmp(node->nodeType, "IfStmt") || !strcmp(node->nodeType, "WhileStmt") || !strcmp(node->nodeType, "BreakStmt") || !strcmp(node->nodeType, "ContinueStmt") || !strcmp(node->nodeType, "ReturnStmt") || !strcmp(node->nodeType, "EmptyStmt") || !strcmp(node->nodeType, "expStmt"))
 		printf("%s\n", node->nodeType);
 
 	showAst(node->left, nest + 1);
@@ -541,7 +539,7 @@ past ConstInitVal()
 	if (tok == LP)
 	{
 		advance();
-		if (tok == IDN || tok == ADD || tok == SUB || tok == NOT || tok == SLP || tok == NUM)
+		if (tok != RP)
 		{
 			tmp->left = ConstInitVal();
 			tmp = tmp->left;
@@ -549,6 +547,7 @@ past ConstInitVal()
 			{
 				advance();
 				tmp->next = ConstInitVal();
+				tmp = tmp->next;
 			}
 		}
 		if (tok == RP)
@@ -679,7 +678,7 @@ past InitVal()
 	if (tok == LP)
 	{
 		advance();
-		if (tok == IDN || tok == NUM || tok == SUB || tok == ADD || tok == NOT || tok == SLP)
+		if (tok != RP)
 		{
 			tmp->left = InitVal();
 			tmp = tmp->left;
@@ -717,6 +716,7 @@ past FuncDef()
 	if (tok == IDN)
 	{
 		past idn = newIdent(strdup(yytext), NULL);
+		idn->nodeType = "FuncName";
 		tmp->next = idn;
 		tmp = tmp->next;
 		advance();
@@ -889,28 +889,30 @@ past Block()
 	if (tok == LP)
 	{
 		advance();
+		while (tok == COMMENT || tok == COMMENTS)
+		{
+			advance();
+		}
 		if (tok != RP)
 		{
 			tmp->left = BlockItem();
 			if (tmp->left == NULL)
 			{
-				printf("Error: astBlockItem()\n");
+				printf("901Error: BlockItem()\n");
 				return NULL;
 			}
 			tmp = tmp->left;
 		}
-		// else
-		// {
-		// 	tmp->left = newAstNode();
-		// 	tmp->left->nodeType = "NullBlock";
-		// 	tmp->left->value.svalue = "NULL";
-		// }
-		while (tok == INT || tok == CONST || tok == IDN || tok == RETURN || tok == IF || tok == CONTINUE || tok == WHILE || tok == BREAK || tok == NUM || tok == ADD || tok == SUB || tok == NOT || tok == SLP || tok == SEMI)
+		while (tok != RP)
 		{
+			while (tok == COMMENT || tok == COMMENTS)
+			{
+				advance();
+			}
 			tmp->next = BlockItem();
 			if (tmp->next == NULL)
 			{
-				printf("Error: astBlockItem()\n");
+				printf("Error: BlockItem()\n");
 				return NULL;
 			}
 			tmp = tmp->next;
@@ -954,7 +956,9 @@ past BlockItem()
 past Stmt()
 {
 	past root = NULL;
-	if (tok == IF)
+	if (tok == COMMENT || tok == COMMENTS)
+		advance();
+	else if (tok == IF)
 	{
 		root = newAstNode();
 		root->nodeType = "IfStmt";
@@ -1275,13 +1279,14 @@ past UnaryExp()
 		advance();
 		if (tok == SLP)
 		{
+
 			advance();
-			{
-				root = newAstNode();
-				root->nodeType = "FuncRefer";
-				root->left = ue;
+			root = newAstNode();
+			root->nodeType = "FuncRefer";
+			root->left = ue;
+			if (tok != SRP)
 				root->right = FuncRParams();
-			}
+
 			if (tok == SRP)
 			{
 				advance();
@@ -1303,7 +1308,6 @@ past UnaryExp()
 			ue = UnaryExp();
 			ue = newExpr(oper, NULL, ue, NULL);
 		}
-		advance();
 		return ue;
 	}
 	else if (tok == SLP || tok == NUM)
@@ -1337,14 +1341,14 @@ past FuncRParams()
 		root->value.ivalue = 1;
 		past tmp = root;
 		tmp->left = Exp();
-		tmp->left->nodeType = "parameter";
+		tmp->left->nodeType = "FuncRParam";
 		tmp = tmp->left;
 		while (tok == COMMA)
 		{
 			root->value.ivalue++;
 			advance();
 			tmp->next = Exp();
-			tmp->next->nodeType = "parameter";
+			tmp->next->nodeType = "FuncRParam";
 			tmp = tmp->next;
 		}
 		return root;
@@ -1463,9 +1467,14 @@ int main(int argc, char **argv)
 	setbuf(stdout, NULL);
 	advance();
 	past root = CompUnit();
-	showAst(root, 0);
-	freeAst(root);
-	printf("program done successfully!\n");
+	if (root)
+	{
+		showAst(root, 0);
+		freeAst(root);
+		printf("program done successfully!\n");
+	}
+	else
+		printf("Error!\n");
 
 	return 0;
 }

@@ -216,7 +216,7 @@ void ConstInitVal()
 	if (tok == LP)
 	{
 		advance();
-		if (tok == IDN || tok == ADD || tok == SUB || tok == NOT || tok == SLP || tok == NUM)
+		if (tok != RP)
 		{
 			ConstInitVal();
 			while (tok == COMMA)
@@ -295,7 +295,7 @@ void InitVal()
 	if (tok == LP)
 	{
 		advance();
-		if (tok == IDN || tok == NUM || tok == SUB || tok == ADD || tok == NOT || tok == SLP)
+		if (tok != RP)
 		{
 			InitVal();
 			while (tok == COMMA)
@@ -440,8 +440,12 @@ void Block()
 	if (tok == LP)
 	{
 		advance();
-		while (tok == INT || tok == CONST || tok == IDN || tok == RETURN || tok == IF || tok == CONTINUE || tok == WHILE || tok == BREAK || tok == NUM || tok == ADD || tok == SUB || tok == NOT || tok == SLP)
+		while (tok == COMMENTS || tok == COMMENT)
+			advance();
+		while (tok != RP)
 		{
+			while (tok == COMMENTS || tok == COMMENT)
+				advance();
 			BlockItem();
 		}
 		if (tok == RP)
