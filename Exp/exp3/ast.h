@@ -2,7 +2,7 @@
 #include "math.h"
 #include "stdlib.h"
 #include "string.h"
-#include "parser.tab.h"
+#include "lrparser.tab.h"
 
 typedef struct _ast ast;
 typedef struct _ast *past;

@@ -1,12 +1,11 @@
 %{
-	#include "parser.tab.h"
+	#include "lrparser.tab.h"
 	typedef union {
 	int type_int;
 	char* type_char;
 	struct _ast *past;
 	} YYLVAL;
 #define YYSTYPE YYLVAL
-	int line = 1;
 %}
 
 %option yylineno
@@ -16,7 +15,6 @@ NOTE_S     \/\/(.)*\n
 NOTE_M     \/\*(.|\n)*?\*\/
 IDENTIFIER [_a-zA-Z][_a-zA-Z0-9]*
 SPACE      [ \t\r\n]+
-/* EOL        \n */
 
 %%
 "int"                       {return INT;}
@@ -57,8 +55,6 @@ SPACE      [ \t\r\n]+
 {NOTE_M}*                   {return COMMENTS;}
 {DIGIT}+"."*{DIGIT}* 	    {yylval.type_int = atoi(yytext);return IntConst;}
 {IDENTIFIER}                {yylval.type_char = strdup(yytext);return Ident;}
-
-
 %%
 
 int yywrap(){

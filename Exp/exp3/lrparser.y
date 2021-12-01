@@ -3,10 +3,10 @@
         #include "math.h"
         #include "string.h"
         #include "ast.h"
-        int yylex();
+        extern int yylineno;	
         extern char *yytext;
         FILE *yyin;
-        void yyerror(char* fmt);
+        past tmp;
         past newExpr(int oper, past left, past right, past next);
         past newIdent(char *strVal, past next);
         past newType(int type);
@@ -15,7 +15,7 @@
         past newAstNode();
         void showAst(past node, int nest);
         void freeAst(past node);
-        past tmp;
+        void yyerror(char* s);
 %} 
 
 %union {
@@ -209,18 +209,17 @@ LOrExp: LAndExp { $$ = $1;}
 ConstExp: AddExp { $$ = $1;}
         ;
 %%
+
 int main(int argc, char *argv[]){
-    yyin=fopen(argv[1],"r");
-	if (!yyin) 
-        return 0;
+        yyin=fopen(argv[1],"r");
+        if (!yyin) 
+                return 0;
 	yyparse();
 	return 0;
 }
 
 void yyerror(char *s)
 {
-	extern int yylineno;	// defined and maintained in lex
-	extern char *yytext;	// defined and maintained in lex
         char * s0=strdup(yytext); 
 	int len=strlen(s0);
 	int i;

@@ -199,7 +199,7 @@ void showAst(past node, int nest)
         printf("%s : %s\n", node->nodeType, node->value.svalue);
     else if (!strcmp(node->nodeType, "Type"))
         printf("%s : %s\n", node->nodeType, node->value.svalue);
-    else if (!strcmp(node->nodeType, "AssignStmt") || !strcmp(node->nodeType, "IfStmt") || !strcmp(node->nodeType, "WhileStmt") || !strcmp(node->nodeType, "BreakStmt") || !strcmp(node->nodeType, "ContinueStmt") || !strcmp(node->nodeType, "ReturnStmt") || !strcmp(node->nodeType, "EmptyStmt") || !strcmp(node->nodeType, "expStmt"))
+    else if (!strcmp(node->nodeType, "AssignStmt") || !strcmp(node->nodeType, "IfStmt") || !strcmp(node->nodeType, "WhileStmt") || !strcmp(node->nodeType, "BreakStmt") || !strcmp(node->nodeType, "ContinueStmt") || !strcmp(node->nodeType, "ReturnStmt") || !strcmp(node->nodeType, "EmptyStmt"))
         printf("%s\n", node->nodeType);
 
     showAst(node->left, nest + 1);
