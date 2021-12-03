@@ -28,6 +28,8 @@ past newAstNode_param(char *strVal, char *nodeType, past left, past right, past 
     node->right = right;
     node->next = next;
     node->tail = NULL;
+    node->flag = '#';
+    node->type = -1;
     return node;
 }
 
@@ -39,6 +41,8 @@ past newNum(int value, past next)
     var->value.ivalue = value;
     var->next = next;
     var->tail = NULL;
+    var->flag = '#';
+    var->type = -1;
     return var;
 }
 
@@ -65,6 +69,8 @@ past newType(int type)
     var->right = NULL;
     var->next = NULL;
     var->tail = NULL;
+    var->flag = '#';
+    var->type = -1;
 }
 
 past newIdent(char *IDN, past next)
@@ -75,6 +81,8 @@ past newIdent(char *IDN, past next)
     var->value.svalue = IDN;
     var->next = next;
     var->tail = NULL;
+    var->flag = '#';
+    var->type = -1;
     return var;
 }
 
@@ -135,6 +143,8 @@ past newExpr(int oper, past left, past right, past next)
     var->right = right;
     var->next = next;
     var->tail = NULL;
+    var->flag = '#';
+    var->type = -1;
     return var;
 }
 
@@ -196,7 +206,7 @@ void showAst(past node, int nest)
     else if (!strcmp(node->nodeType, "FuncRParams"))
         printf("%s\n", node->nodeType);
     else if (!strcmp(node->nodeType, "FuncRParam"))
-        printf("%s : %s\n", node->nodeType, node->value.svalue);
+        printf("%s\n", node->nodeType);
     else if (!strcmp(node->nodeType, "Type"))
         printf("%s : %s\n", node->nodeType, node->value.svalue);
     else if (!strcmp(node->nodeType, "AssignStmt") || !strcmp(node->nodeType, "IfStmt") || !strcmp(node->nodeType, "WhileStmt") || !strcmp(node->nodeType, "BreakStmt") || !strcmp(node->nodeType, "ContinueStmt") || !strcmp(node->nodeType, "ReturnStmt") || !strcmp(node->nodeType, "EmptyStmt"))

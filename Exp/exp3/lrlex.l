@@ -6,6 +6,9 @@
 	struct _ast *past;
 	} YYLVAL;
 #define YYSTYPE YYLVAL
+	int scopeLevel=0;
+	int beginScope();
+	int endScope();
 %}
 
 %option yylineno
@@ -41,8 +44,8 @@ SPACE      [ \t\r\n]+
 "||"                        {return OR;}
 "&&"                        {return AND;}
 "!"                         {return NOT;}
-"{"                         {return LP;}
-"}"                         {return RP;}
+"{"                         {scopeLevel++;return LP;}
+"}"                         {scopeLevel--;return RP;}
 "("                         {return SLP;}
 ")"                         {return SRP;}
 "["                         {return MLP;}

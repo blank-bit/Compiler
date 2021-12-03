@@ -3,19 +3,19 @@
         #include "math.h"
         #include "string.h"
         #include "ast.h"
-        extern int yylineno;	
-        extern char *yytext;
-        FILE *yyin;
         past tmp;
-        past newExpr(int oper, past left, past right, past next);
-        past newIdent(char *strVal, past next);
-        past newType(int type);
-        past newNum(int value, past next);
-        past newAstNode_param(char *strVal, char *nodeType, past left, past right, past next);
-        past newAstNode();
-        void showAst(past node, int nest);
-        void freeAst(past node);
-        void yyerror(char* s);
+        // extern past newExpr(int oper, past left, past right, past next);
+        // extern past newIdent(char *strVal, past next);
+        // extern past newType(int type);
+        // extern past newNum(int value, past next);
+        // extern past newAstNode_param(char *strVal, char *nodeType, past left, past right, past next);
+        // extern past newAstNode();
+        // void showAst(past node, int nest);
+        // void freeAst(past node);
+        int yylex(void);
+        int scopeLevel;
+        extern int yylineno;
+        // extern pscopeInfo scopeStack;
 %} 
 
 %union {
@@ -47,11 +47,11 @@
 
 
 %%
-program: CompUnits {$$=newAstNode_param("","CompUnit",$1,NULL,NULL);if($$){showAst($$,0);freeAst($$);printf("Program done successfully!\n");}else printf("Error!\n");}
+program: CompUnits {$$=newAstNode_param("","CompUnit",$1,NULL,NULL);if($$){if(semantic_Analysis($$)){/*showsymbotbl();*/showAst($$,0);freeAst($$);printf("Program done successfully!\n");}}else printf("Error!\n");}
         ;
 CompUnits: {$$=NULL;}
         | CompUnit {$$ = $1;}
-        | CompUnits CompUnit {if($1->flag == 0){$1->flag++;$1->next = $2;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $2;$$ = $1;$1->tail = $1->tail->next;}}
+        | CompUnits CompUnit {if($1->flag_f == 0){$1->flag_f++;$1->next = $2;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $2;$$ = $1;$1->tail = $1->tail->next;}}
         ;
 CompUnit: Decl {$$ = $1;}
         | FuncDef {$$ = $1;}
@@ -64,15 +64,15 @@ Decl:   ConstDecl {$$=$1;}
 ConstDecl: CONST BType ConstDefList SEMI {$$=newAstNode_param("", "ConstDecl", $2, $3, NULL);}
         ;
 ConstDefList: ConstDef {$$ = $1;}
-        | ConstDefList COMMA ConstDef {if($1->flag == 0){$1->flag++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
+        | ConstDefList COMMA ConstDef {if($1->flag_f == 0){$1->flag_f++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
         ;
 BType: INT {$$=newType(INT);}
         ;
-ConstDef: Ident ASSIGN ConstInitVal {tmp = newIdent($1,NULL);$$ = newAstNode_param("", "ConstDef",tmp, $3, NULL);}
-        | Ident ConstExpList ASSIGN ConstInitVal {tmp = newIdent($1,NULL);tmp ->nodeType = "ArrayID";tmp ->left = $2;$$ = newAstNode_param("", "ConstDef", tmp, $4, NULL);}
+ConstDef: Ident ASSIGN ConstInitVal {tmp = newIdent($1,NULL);tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'V';$$ = newAstNode_param("", "ConstDef",tmp, $3, NULL);}
+        | Ident ConstExpList ASSIGN ConstInitVal {tmp = newIdent($1,NULL);tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag='V';tmp ->nodeType = "ArrayID";tmp ->left = $2;$$ = newAstNode_param("", "ConstDef", tmp, $4, NULL);}
         ;
 ConstExpList: MConstExp {$$ = $1;}
-        | ConstExpList MConstExp {if($1->flag == 0){$1->flag++;$1->next = $2;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $2;$$ = $1;$1->tail = $1->tail->next;}}
+        | ConstExpList MConstExp {if($1->flag_f == 0){$1->flag_f++;$1->next = $2;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $2;$$ = $1;$1->tail = $1->tail->next;}}
         ;
 MConstExp:MLP ConstExp MRP {$$ = newAstNode_param("", "ArrayIndex", $2, NULL, NULL);}
         ;
@@ -81,50 +81,50 @@ ConstInitVal: ConstExp {$$ = newAstNode_param("", "ConstInitVal", $1, NULL, NULL
         | LP ConstInitValList RP {$$=newAstNode_param("", "ConstInitVal", $2, NULL, NULL);}
         ;
 ConstInitValList: ConstInitVal {$$ = $1;}
-        | ConstInitValList COMMA ConstInitVal {if($1->flag == 0){$1->flag++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
+        | ConstInitValList COMMA ConstInitVal {if($1->flag_f == 0){$1->flag_f++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
         ;
 VarDecl: BType VarDefList SEMI {$$=newAstNode_param("", "VarDecl", $1, $2, NULL);}
         ;
 VarDefList:VarDef {$$ = $1;}
-        | VarDefList COMMA VarDef { if($1->flag == 0){$1->flag++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
+        | VarDefList COMMA VarDef { if($1->flag_f == 0){$1->flag_f++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
         ;
 VarDef: ArrayDecl { $$=newAstNode_param("", "VarDef", $1,NULL, NULL);}
         | ArrayDecl ASSIGN InitVal { $$=newAstNode_param("", "VarDef", $1,$3, NULL);}
         ;
-ArrayDecl:Ident {$$=newIdent($1,NULL);}
-        | Ident ConstExpList {tmp = newIdent($1,NULL);tmp -> nodeType = "ArrayID";tmp ->left = $2;$$ = tmp;}
+ArrayDecl:Ident {tmp=newIdent($1,NULL);tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'V';$$=tmp;}
+        | Ident ConstExpList {tmp = newIdent($1,NULL);tmp -> nodeType = "ArrayID";tmp ->left = $2;tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'A';$$ = tmp;}
         ;
 InitVal: Exp { $$ = newAstNode_param("", "InitVal", $1, NULL, NULL);}
         | LP RP { $$ = newAstNode_param("", "InitVal", NULL, NULL, NULL);}
         | LP InitValList RP { $$ = newAstNode_param("", "InitVal", $2, NULL, NULL);}
         ;
 InitValList: InitVal { $$ = $1;}
-        | InitValList COMMA InitVal { if($1->flag == 0){$1->flag++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
+        | InitValList COMMA InitVal { if($1->flag_f == 0){$1->flag_f++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
         ;        
-FuncDef: FuncType Ident SLP SRP Block { tmp = newIdent($2,NULL);tmp->nodeType = "FuncName";$1->next = tmp;$$ = newAstNode_param("","FuncDef",$1,$5,NULL);}
-        | BType Ident SLP SRP Block { tmp = newIdent($2,$5);tmp->nodeType = "FuncName";$$ = newAstNode_param("","FuncDef",$1,tmp,NULL);}
-        | FuncType Ident SLP FuncFParams SRP Block { tmp = newIdent($2,NULL);tmp->next = newAstNode_param("","FuncFParams",$4,NULL,NULL);tmp->nodeType = "FuncName";$1->next = tmp;$$ = newAstNode_param("","FuncDef",$1,$6,NULL);}
-        | BType Ident SLP FuncFParams SRP Block { tmp = newIdent($2,NULL);tmp->next = newAstNode_param("","FuncFParams",$4,NULL,NULL);tmp->nodeType = "FuncName";tmp->next->next = $6;$$ = newAstNode_param("","FuncDef",$1,tmp,NULL);}
+FuncDef: FuncType Ident SLP SRP Block { tmp = newIdent($2,NULL);tmp->type = 2;tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'F';tmp->nodeType = "FuncName";$1->next = tmp;$$ = newAstNode_param("","FuncDef",$1,$5,NULL);}
+        | BType Ident SLP SRP Block { tmp = newIdent($2,$5);tmp->type = 1;tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'F';tmp->nodeType = "FuncName";$$ = newAstNode_param("","FuncDef",$1,tmp,NULL);}
+        | FuncType Ident SLP FuncFParams SRP Block { tmp = newIdent($2,NULL);tmp->type = 2;tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'F';tmp->next = newAstNode_param("","FuncFParams",$4,NULL,NULL);tmp->nodeType = "FuncName";$1->next = tmp;$$ = newAstNode_param("","FuncDef",$1,$6,NULL);}
+        | BType Ident SLP FuncFParams SRP Block { tmp = newIdent($2,NULL);tmp->type = 1;tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'F';tmp->next = newAstNode_param("","FuncFParams",$4,NULL,NULL);tmp->nodeType = "FuncName";$1->next = tmp;$$ = newAstNode_param("","FuncDef",$1,$6,NULL);}
         ; 
 FuncType: VOID { $$ = newType(VOID);}
         ;
 FuncFParams: FuncFParam { $$ = $1;}
-        | FuncFParams COMMA FuncFParam { if($1->flag == 0){$1->flag++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
+        | FuncFParams COMMA FuncFParam { if($1->flag_f == 0){$1->flag_f++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
         ;
-FuncFParam: BType Ident { $$ = newAstNode_param("","FuncFParam",$1,newIdent($2,NULL),NULL);}
-        | BType Ident ArrIndex { tmp = newIdent($2,NULL);tmp->left = $3;tmp->nodeType = "ArrayID";$$ = newAstNode_param("","FuncFParam",$1,tmp,NULL);}
+FuncFParam: BType Ident {tmp=newIdent($2,NULL);tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'P';$$ = newAstNode_param("","FuncFParam",$1,tmp,NULL);}
+        | BType Ident ArrIndex { tmp = newIdent($2,NULL);tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'P';tmp->left = $3;tmp->nodeType = "ArrayID";$$ = newAstNode_param("","FuncFParam",$1,tmp,NULL);}
         ; 
 ArrIndex: MLP MRP { $$ = newAstNode_param("","ArrayIndex",NULL,NULL,NULL);}
-        | ArrIndex ArrIndexList{ if($1->flag == 0){$1->flag++;$1->next = $2;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $2;$$ = $1;$1->tail = $1->tail->next;} }
+        | ArrIndex ArrIndexList{ if($1->flag_f == 0){$1->flag_f++;$1->next = $2;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $2;$$ = $1;$1->tail = $1->tail->next;} }
         ;
 ArrIndexList: MLP Exp MRP { $$ = newAstNode_param("","ArrayIndex",$2,NULL,NULL);}
-        | ArrIndexList MLP Exp MRP { if($1->flag == 0){$1->flag++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
+        | ArrIndexList MLP Exp MRP { if($1->flag_f == 0){$1->flag_f++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
         ;
 Block: LP RP { $$ = newAstNode_param("","Block",NULL,NULL,NULL);}
-        | LP BlockItems RP { $$ = newAstNode_param("","Block",$2,NULL,NULL);}
+        | LP BlockItems RP {$$ = newAstNode_param("","Block",$2,NULL,NULL);}
         ;
 BlockItems: BlockItem { $$ = $1;}
-        | BlockItems BlockItem { if($1->flag == 0){$1->flag++;$1->next = $2;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $2;$$ = $1;$1->tail = $1->tail->next;}}
+        | BlockItems BlockItem { if($1->flag_f == 0){$1->flag_f++;$1->next = $2;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $2;$$ = $1;$1->tail = $1->tail->next;}}
         ;
 BlockItem: Decl { $$ = $1;}
         | Stmt { $$ = $1;}
@@ -149,8 +149,8 @@ Exp: AddExp { $$ = $1;}
         ;
 Cond: LOrExp {$$ = $1;}
         ;
-LVal: Ident { $$ = newIdent($1,NULL);}
-        | Ident ArrIndexList { tmp = newIdent($1,NULL);tmp->left = $2;tmp->nodeType = "ArrayID";$$=tmp;}
+LVal: Ident { tmp = newIdent($1,NULL);tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'T';$$=tmp;}
+        | Ident ArrIndexList { tmp = newIdent($1,NULL);tmp->left = $2;tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'Y';tmp->nodeType = "ArrayID";$$=tmp;}
         ;
 PrimaryExp: SLP Exp SRP { $$ = $2;}
         | LVal { $$ = $1;}
@@ -159,8 +159,8 @@ PrimaryExp: SLP Exp SRP { $$ = $2;}
 Number: IntConst { $$ = newNum($1,NULL);}
         ;
 UnaryExp: PrimaryExp { $$ = $1;}
-        | Ident SLP SRP { tmp = newIdent($1,NULL);tmp->nodeType = "FuncName";$$ = newAstNode_param("","FuncRefer",tmp,NULL,NULL);}
-        | Ident SLP FuncRParams SRP { tmp = newIdent($1,NULL);tmp->nodeType = "FuncName";$$ = newAstNode_param("","FuncRefer",tmp,newAstNode_param("","FuncRParams",$3,NULL,NULL),NULL);}
+        | Ident SLP SRP { tmp = newIdent($1,NULL);tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'R';;tmp->nodeType = "FuncName";$$ = newAstNode_param("","FuncRefer",tmp,NULL,NULL);}
+        | Ident SLP FuncRParams SRP { tmp = newIdent($1,NULL);tmp->line = yylineno;tmp->level = scopeLevel;tmp->flag = 'R';tmp->nodeType = "FuncName";$$ = newAstNode_param("","FuncRefer",tmp,newAstNode_param("","FuncRParams",$3,NULL,NULL),NULL);}
         | UnaryOp UnaryExp { $1->right = $2;$1->nodeType = "PreExpr";$$ = $1;}
         ;
 UnaryOp: ADD { $$ = newExpr(ADD, NULL, NULL, NULL);}
@@ -168,7 +168,7 @@ UnaryOp: ADD { $$ = newExpr(ADD, NULL, NULL, NULL);}
         | NOT { $$ = newExpr(NOT, NULL, NULL, NULL);}
         ;
 FuncRParams: FuncRParam { $$ = $1;}
-        | FuncRParams COMMA FuncRParam { if($1->flag == 0){$1->flag++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
+        | FuncRParams COMMA FuncRParam { if($1->flag_f == 0){$1->flag_f++;$1->next = $3;$$ = $1;$1->tail = $1->next;}else {$1->tail->next = $3;$$ = $1;$1->tail = $1->tail->next;}}
         ;
 FuncRParam:Exp {$$ = newAstNode_param("","FuncRParam",$1,NULL,NULL);}
         ;
@@ -210,19 +210,3 @@ ConstExp: AddExp { $$ = $1;}
         ;
 %%
 
-int main(int argc, char *argv[]){
-        yyin=fopen(argv[1],"r");
-        if (!yyin) 
-                return 0;
-	yyparse();
-	return 0;
-}
-
-void yyerror(char *s)
-{
-        char * s0=strdup(yytext); 
-	int len=strlen(s0);
-	int i;
-	char buf[512]={0};
-	fprintf(stderr, "ERROR: %s at symbol '%s' on line %d\n", s, s0, yylineno);
-}

@@ -1,5 +1,8 @@
 int main()
 {
+    int m[7];
+    m[1] = 0;
+    f = 9;
     int i;
     int j;
     int k;
@@ -9,6 +12,8 @@ int main()
     k = 0;
     while (i < 21)
     {
+        int i;
+        int i;
         while (j < 101 - i)
         {
             k = 100 - i - j;
@@ -27,3 +32,16 @@ int main()
 
     return 0;
 }
+
+int p[8];
+
+int func(int c, int b)
+{
+    int i;
+    int j;
+    k = 8;
+    b = 6;
+    p[6] = 9;
+}
+
+int k;
